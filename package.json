@@ -1,0 +1,17 @@
+{
+	"name": "runmake",
+	"description": "Runs `make` when any file changes",
+	"version": "0.1.0",
+	"main": "lib/index.js",
+	"bin": {
+		"runmake": "lib/cli.js"
+	},
+	"author": "Prokop Schield",
+	"license": "GPL-3.0-or-later",
+	"dependencies": {
+		"ts-hound": "^1.0.8"
+	},
+	"devDependencies": {
+		"@types/node": "^14"
+	}
+}

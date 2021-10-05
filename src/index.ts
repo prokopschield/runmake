@@ -48,7 +48,9 @@ export default function runmake(directory: string = '.', ...argv: string[]) {
 			if (!lastmod || nowmod > lastmod) {
 				modmap.set(file, nowmod);
 				last_refresh = new Date();
-				maker.refresh();
+				maker.kill();
+				console.clear();
+				maker.start();
 			}
 		} catch (error) {}
 	});

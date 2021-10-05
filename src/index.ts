@@ -38,17 +38,18 @@ export default function runmake(directory: string = '.', ...argv: string[]) {
 	const maker = new Maker(['make', ...argv].join(' '));
 	const hound = watch(directory);
 	const modmap = new Map<string, Date>();
+	let last_refresh = new Date();
 	hound.on('change', async (file: string) => {
 		try {
+			if (Date.now() - +last_refresh < 1400) return;
 			const stat = await fs.promises.stat(file);
 			const lastmod = modmap.get(file);
 			const nowmod = stat.mtime;
 			if (!lastmod || nowmod > lastmod) {
 				modmap.set(file, nowmod);
+				last_refresh = new Date();
 				maker.refresh();
 			}
-		} catch (error) {
-			console.log(error);
-		}
+		} catch (error) {}
 	});
 }

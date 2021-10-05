@@ -1,4 +1,5 @@
 import { ChildProcess, exec } from 'child_process';
+import fs from 'fs';
 import { watch } from 'ts-hound';
 
 export class Maker {
@@ -7,22 +8,19 @@ export class Maker {
 	constructor(command = 'make') {
 		this._command = command;
 		this._process = this.start();
+		process.stdin.on('data', (c) => this._process.stdin?.write(c));
 	}
 	refresh(): ChildProcess {
-		this._process.kill();
+		this.kill();
 		return this.start();
 	}
 	kill(): boolean {
-		this._process.stdout?.unpipe(process.stdout);
-		this._process.stderr?.unpipe(process.stderr);
-		this._process.stdin && process.stdin.unpipe(this._process.stdin);
 		return this._process.kill();
 	}
 	start(): ChildProcess {
 		this._process = exec(this._command);
-		this._process.stdout?.pipe(process.stdout);
-		this._process.stderr?.pipe(process.stderr);
-		process.stdin.pipe(process.stdin);
+		this._process.stdout?.on('data', (c) => process.stdout.write(c));
+		this._process.stderr?.on('data', (c) => process.stderr.write(c));
 		return this._process;
 	}
 	get command() {
@@ -39,5 +37,18 @@ export class Maker {
 export default function runmake(directory: string = '.', ...argv: string[]) {
 	const maker = new Maker(['make', ...argv].join(' '));
 	const hound = watch(directory);
-	hound.on('change', () => maker.refresh());
+	const modmap = new Map<string, Date>();
+	hound.on('change', async (file: string) => {
+		try {
+			const stat = await fs.promises.stat(file);
+			const lastmod = modmap.get(file);
+			const nowmod = stat.mtime;
+			if (!lastmod || nowmod > lastmod) {
+				modmap.set(file, nowmod);
+				maker.refresh();
+			}
+		} catch (error) {
+			console.log(error);
+		}
+	});
 }

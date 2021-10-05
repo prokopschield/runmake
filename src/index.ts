@@ -49,6 +49,7 @@ export default function runmake(directory: string = '.', ...argv: string[]) {
 				modmap.set(file, nowmod);
 				last_refresh = new Date();
 				maker.kill();
+				await new Promise((resolve) => setTimeout(resolve, 40));
 				console.clear();
 				maker.start();
 			}
